@@ -5,6 +5,7 @@ using Photon.Pun;
 using Photon.Realtime;
 using TMPro;
 using UnityEngine.UI;
+using System;
 
 public class ConnectPhoton : MonoBehaviourPunCallbacks
 {
@@ -12,6 +13,9 @@ public class ConnectPhoton : MonoBehaviourPunCallbacks
     public GameObject welcomePanel;
     public GameObject createRoomPanel;
     public GameObject roomManagerPanel;
+    public GameObject createdRoomPanel;
+    public GameObject joinRoomPanel;
+
 
     [Header("GUI State")]
     public TextMeshProUGUI txtNickname, txtState;
@@ -25,6 +29,15 @@ public class ConnectPhoton : MonoBehaviourPunCallbacks
     public TMP_InputField inputMinPlayers;
     public TMP_InputField inputMaxPlayers;
 
+    [Header("GUI Created Room")]
+    public TextMeshProUGUI txtRoomDetails, txtPlayerList;
+    public GameObject playerListContent;
+    public Button playerBtn;
+
+    [Header("GUI Join Room")]
+    public TMP_InputField inputJoinRoomName;
+
+
     private void Start()
     {
         ChangeCurrentPanel(welcomePanel);
@@ -37,6 +50,7 @@ public class ConnectPhoton : MonoBehaviourPunCallbacks
             if(!(PhotonNetwork.IsConnected))
             {
                 btnSubmit.interactable = false;
+                PhotonNetwork.NickName = inputNickname.text;
                 PhotonNetwork.ConnectUsingSettings();
                 changeState("Connecting...");
             }
@@ -61,7 +75,7 @@ public class ConnectPhoton : MonoBehaviourPunCallbacks
                 RoomOptions roomOptions = new RoomOptions();
                 roomOptions.MaxPlayers = (byte)max;
                 roomOptions.IsVisible = true;
-                roomOptions.IsOpen = false;
+                roomOptions.IsOpen = true;
                 PhotonNetwork.CreateRoom(inputRoomName.text, roomOptions, TypedLobby.Default);
             }
             else
@@ -72,6 +86,17 @@ public class ConnectPhoton : MonoBehaviourPunCallbacks
         } else
         {
             changeState("Room name not valid");
+        }
+    }
+
+    public void TryToJoinRoomOfName()
+    {
+        if(!string.IsNullOrWhiteSpace(inputJoinRoomName.text))
+        {
+            PhotonNetwork.JoinRoom(inputJoinRoomName.text);
+        } else
+        {
+            changeState("Room Name Not Valid!");
         }
     }
 
@@ -87,6 +112,21 @@ public class ConnectPhoton : MonoBehaviourPunCallbacks
     {
         base.OnCreatedRoom();
         changeState("Room created succesfully");
+        ChangeCurrentPanel(createdRoomPanel);
+        SetRoomDetails();
+    }
+
+    public override void OnJoinedRoom()
+    {
+        base.OnJoinedRoom();
+        ChangeCurrentPanel(createdRoomPanel);
+        SetRoomDetails();
+    }
+
+    public override void OnJoinRoomFailed(short returnCode, string message)
+    {
+        base.OnJoinRoomFailed(returnCode, message);
+        changeState("Couldn't join room: " + message);
     }
 
     public override void OnCreateRoomFailed(short returnCode, string message)
@@ -95,18 +135,79 @@ public class ConnectPhoton : MonoBehaviourPunCallbacks
         changeState("Couldn't create room: " + message);
     }
 
+    public override void OnPlayerEnteredRoom(Player newPlayer)
+    {
+        base.OnPlayerEnteredRoom(newPlayer);
+        SetRoomDetails();
+    }
+
+    public override void OnPlayerLeftRoom(Player otherPlayer)
+    {
+        base.OnPlayerLeftRoom(otherPlayer);
+        SetRoomDetails();
+    }
     #endregion
+
+    private void SetRoomDetails()
+    {
+        Room currentRoom = PhotonNetwork.CurrentRoom;
+        string roomInfo = "Room Information";
+        roomInfo += "\n\nName: " + currentRoom.Name;
+        roomInfo += "\nPlayers: " + currentRoom.PlayerCount + "/" + currentRoom.MaxPlayers;
+        roomInfo += "\nOpen: " + (currentRoom.IsOpen ? "Open" : "Closed");
+        txtRoomDetails.text = roomInfo;
+
+        UpdatePlayerList();
+    }
+
+    private void UpdatePlayerList()
+    {
+        Room currentRoom = PhotonNetwork.CurrentRoom;
+        if (playerListContent.transform.childCount > 0)
+        {
+            foreach (Transform transform in playerListContent.transform)
+            {
+                Destroy(transform.gameObject);
+            }
+        }
+        foreach (Player player in currentRoom.Players.Values)
+        {
+            
+            string playerName = player.NickName;
+            string team = "Team";
+            Button btn = Instantiate(playerBtn, playerListContent.transform);
+            btn.transform.Find("name").GetComponent<TextMeshProUGUI>().text = playerName;
+            btn.transform.Find("team").GetComponent<TextMeshProUGUI>().text = "Team";
+        }
+    }
 
     public void OnClickGoToCreateRoom()
     {
         ChangeCurrentPanel(createRoomPanel);
     }
 
+    public void OnClickGoToJoinRoom()
+    {
+        ChangeCurrentPanel(joinRoomPanel);
+    }
+
+    public void GoBack(GameObject lastRoom)
+    {
+        if(PhotonNetwork.CurrentRoom != null)
+        {
+            PhotonNetwork.LeaveRoom();
+        }
+        ChangeCurrentPanel(lastRoom);
+    }
+
     private void ChangeCurrentPanel (GameObject targetPanel)
     {
+
         welcomePanel.SetActive(false);
         createRoomPanel.SetActive(false);
         roomManagerPanel.SetActive(false);
+        createdRoomPanel.SetActive(false);
+        joinRoomPanel.SetActive(false);
 
         targetPanel.SetActive(true);
     }
