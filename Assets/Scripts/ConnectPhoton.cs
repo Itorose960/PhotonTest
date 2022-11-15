@@ -6,6 +6,7 @@ using Photon.Realtime;
 using TMPro;
 using UnityEngine.UI;
 using System;
+using ExitGames.Client.Photon;
 
 public class ConnectPhoton : MonoBehaviourPunCallbacks
 {
@@ -33,6 +34,7 @@ public class ConnectPhoton : MonoBehaviourPunCallbacks
     public TextMeshProUGUI txtRoomDetails, txtPlayerList;
     public GameObject playerListContent;
     public Button playerBtn;
+    public Button StartGame;
 
     [Header("GUI Join Room")]
     public TMP_InputField inputJoinRoomName;
@@ -41,7 +43,11 @@ public class ConnectPhoton : MonoBehaviourPunCallbacks
     private void Start()
     {
         ChangeCurrentPanel(welcomePanel);
+        PhotonNetwork.AutomaticallySyncScene = true;
+        DontDestroyOnLoad(this.gameObject);
+
     }
+
 
     public void OnClickConnectToServer()
     {
@@ -55,7 +61,6 @@ public class ConnectPhoton : MonoBehaviourPunCallbacks
                 changeState("Connecting...");
             }
             txtNickname.text = inputNickname.text;
-            ChangeCurrentPanel(roomManagerPanel);
         } else
         {
             changeState("Nickname not valid");
@@ -65,28 +70,39 @@ public class ConnectPhoton : MonoBehaviourPunCallbacks
     public void OnClickCreateRoom()
     {
         int min, max;
-        min = int.Parse(inputMinPlayers.text);
-        max = int.Parse(inputMaxPlayers.text);
 
-        if (!(string.IsNullOrEmpty(inputRoomName.text) || string.IsNullOrWhiteSpace(inputRoomName.text)))
+        if(!string.IsNullOrWhiteSpace(inputMinPlayers.text) && !string.IsNullOrWhiteSpace(inputMaxPlayers.text))
         {
-            if(min > 0 && max >= min)
+            min = int.Parse(inputMinPlayers.text);
+            max = int.Parse(inputMaxPlayers.text);
+
+            if (!(string.IsNullOrEmpty(inputRoomName.text) || string.IsNullOrWhiteSpace(inputRoomName.text)))
             {
-                RoomOptions roomOptions = new RoomOptions();
-                roomOptions.MaxPlayers = (byte)max;
-                roomOptions.IsVisible = true;
-                roomOptions.IsOpen = true;
-                PhotonNetwork.CreateRoom(inputRoomName.text, roomOptions, TypedLobby.Default);
+                if (min > 0 && max >= min)
+                {
+                    RoomOptions roomOptions = new RoomOptions();
+                    roomOptions.MaxPlayers = (byte)max;
+                    roomOptions.IsVisible = true;
+                    roomOptions.IsOpen = true;
+                    roomOptions.CustomRoomProperties = new ExitGames.Client.Photon.Hashtable();
+                    roomOptions.CustomRoomProperties.Add("min", min);
+                    PhotonNetwork.CreateRoom(inputRoomName.text, roomOptions, TypedLobby.Default);
+                }
+                else
+                {
+                    changeState("Players limits not valid");
+                }
+
             }
             else
             {
-                changeState("Players limits not valid");
+                changeState("Room name not valid");
             }
-            
         } else
         {
-            changeState("Room name not valid");
+            changeState("Player limits not defined!");
         }
+       
     }
 
     public void TryToJoinRoomOfName()
@@ -106,6 +122,7 @@ public class ConnectPhoton : MonoBehaviourPunCallbacks
     {     
         base.OnConnected();
         changeState("Connected");
+        ChangeCurrentPanel(roomManagerPanel);
     }
 
     public override void OnCreatedRoom()
@@ -156,7 +173,14 @@ public class ConnectPhoton : MonoBehaviourPunCallbacks
         roomInfo += "\nPlayers: " + currentRoom.PlayerCount + "/" + currentRoom.MaxPlayers;
         roomInfo += "\nOpen: " + (currentRoom.IsOpen ? "Open" : "Closed");
         txtRoomDetails.text = roomInfo;
-
+        
+        if(PhotonNetwork.IsMasterClient && currentRoom.PlayerCount >= int.Parse(currentRoom.CustomProperties["min"].ToString()))
+        {
+            StartGame.gameObject.SetActive(true);
+        } else
+        {
+            StartGame.gameObject.SetActive(false);
+        }
         UpdatePlayerList();
     }
 
@@ -189,6 +213,14 @@ public class ConnectPhoton : MonoBehaviourPunCallbacks
     public void OnClickGoToJoinRoom()
     {
         ChangeCurrentPanel(joinRoomPanel);
+    }
+
+    public void OnClickStartGame()
+    {
+        Room currentRoom = PhotonNetwork.CurrentRoom;
+        PhotonNetwork.CurrentRoom.IsOpen = false;
+        PhotonNetwork.CurrentRoom.IsVisible = false;
+        PhotonNetwork.LoadLevel(1);
     }
 
     public void GoBack(GameObject lastRoom)
