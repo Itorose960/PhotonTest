@@ -1,4 +1,5 @@
 using Photon.Pun;
+using Photon.Pun.Demo.Asteroids;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -11,7 +12,7 @@ public class PlayerMovementController : MonoBehaviourPunCallbacks
     private float speed = 5f;
     [SerializeField] private bool isGrounded = false;
     private bool hasJumped = false;
-    [SerializeField] private float jumpForce = 10f;
+    [SerializeField] private float jumpForce = 4f;
 
     [Header("Camera")]
     private float mouseSensitivity = 3f;
@@ -20,19 +21,23 @@ public class PlayerMovementController : MonoBehaviourPunCallbacks
     private float rotationX;
 
     private Rigidbody rb;
-    private Camera cam;
+    private GameObject cam;
+    private Animator anim;
+    RaycastHit hit;
 
     private void Start()
     {
         rb = GetComponent<Rigidbody>();
-        cam = this.gameObject.transform.Find("PlayerCamera").GetComponent<Camera>();
+        cam = this.gameObject.transform.Find("PlayerCamera").gameObject;
         if (photonView.IsMine)
         {
             Cursor.lockState = CursorLockMode.Locked;
         } else
         {
             Destroy(cam.gameObject);
+            cam = gameObject;
         }
+        transform.TryGetComponent<Animator>(out anim);
     }
 
     private void Update()
@@ -47,9 +52,8 @@ public class PlayerMovementController : MonoBehaviourPunCallbacks
 
     private void JumpPlayer()
     {
-        if(Input.GetButtonDown("Jump") && isGrounded)
+        if(Input.GetButtonDown("Jump") && CheckGrounded())
         {
-            hasJumped = true;
             rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
         } 
     }
@@ -75,44 +79,33 @@ public class PlayerMovementController : MonoBehaviourPunCallbacks
         transform.eulerAngles += Vector3.up * y;
     }
 
-    private void OnTriggerStay(Collider other)
+    private bool CheckGrounded()
     {
-        
-        if(photonView.IsMine)
-        {
-            if (other.CompareTag("Ground") || other.CompareTag("Interacteable"))
+        Ray ray = new Ray(transform.position, Vector3.down);
+        if(Physics.Raycast(ray, out hit, Mathf.Infinity)) {
+            Debug.Log("Name:" + hit.collider.name + "\nDistance: " + (transform.GetChild(transform.childCount - 1).transform.position.y - hit.collider.transform.position.y));
+            if((transform.GetChild(transform.childCount - 1).transform.position.y - hit.collider.transform.position.y) < 1f)
             {
-                Debug.Log("IsGrounded + " + isGrounded);
-                isGrounded = true;
-                hasJumped = false;
+                return true;
             }
         }
+        return false;
     }
 
-    private void OnTriggerExit(Collider other)
+    [PunRPC]
+    public void SetParent(int body, int parent)
     {
-       if(photonView.IsMine)
-        {
-           
-            if (other.CompareTag("Ground") || other.CompareTag("Interacteable"))
-            {
-                Debug.Log("Left Trigger");
-                if (!hasJumped)
-                {
-                    StopCoroutine(jumpWindow());
-                    StartCoroutine(jumpWindow());
-                }
-                else
-                {
-                    isGrounded = false;
-                }
-            }
-        }
+
+        PhotonView.Find(body).gameObject.transform.SetParent(PhotonView.Find(parent).gameObject.transform);
+
     }
 
-    IEnumerator jumpWindow()
+    [PunRPC]
+    public void LoseParent(int body)
     {
-        yield return new WaitForSeconds(0.2f);
-        isGrounded = false;
+
+        PhotonView.Find(body).gameObject.transform.SetParent(GameObject.Find("ChildKiller").transform);
     }
+
+    
 }

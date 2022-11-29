@@ -10,12 +10,17 @@ using ExitGames.Client.Photon;
 
 public class ConnectPhoton : MonoBehaviourPunCallbacks
 {
+
+    [Header("Properties")]
+    private ExitGames.Client.Photon.Hashtable playerProperties;
+
     [Header("Panels")]
     public GameObject welcomePanel;
     public GameObject createRoomPanel;
     public GameObject roomManagerPanel;
     public GameObject createdRoomPanel;
     public GameObject joinRoomPanel;
+    public GameObject chooseTeamPanel;
 
 
     [Header("GUI State")]
@@ -107,9 +112,25 @@ public class ConnectPhoton : MonoBehaviourPunCallbacks
 
     public void TryToJoinRoomOfName()
     {
-        if(!string.IsNullOrWhiteSpace(inputJoinRoomName.text))
+        if(!string.IsNullOrWhiteSpace(inputJoinRoomName.text) || !string.IsNullOrWhiteSpace(inputRoomName.text))
         {
-            PhotonNetwork.JoinRoom(inputJoinRoomName.text);
+            int min = int.Parse(inputMinPlayers.text ?? "4");
+            int max = int.Parse(inputMaxPlayers.text ?? "1");
+    
+            if (min > 0 && max >= min)
+            {
+                RoomOptions roomOptions = new RoomOptions();
+                roomOptions.IsVisible = true;
+                roomOptions.IsOpen = true;
+                roomOptions.CustomRoomProperties = new ExitGames.Client.Photon.Hashtable();
+                roomOptions.MaxPlayers = (byte)max;
+                roomOptions.CustomRoomProperties.Add("min", min);
+                PhotonNetwork.JoinOrCreateRoom(!string.IsNullOrWhiteSpace(inputJoinRoomName.text) ? inputJoinRoomName.text : inputRoomName.text, roomOptions, TypedLobby.Default);
+            } else
+            {
+                changeState("Players limits not valid");
+            }
+           
         } else
         {
             changeState("Room Name Not Valid!");
@@ -123,6 +144,9 @@ public class ConnectPhoton : MonoBehaviourPunCallbacks
         base.OnConnected();
         changeState("Connected");
         ChangeCurrentPanel(roomManagerPanel);
+        playerProperties = new ExitGames.Client.Photon.Hashtable();
+        playerProperties.Add("team", Teams.TEAMLESS);
+        PhotonNetwork.LocalPlayer.SetCustomProperties(playerProperties);
     }
 
     public override void OnCreatedRoom()
@@ -144,12 +168,14 @@ public class ConnectPhoton : MonoBehaviourPunCallbacks
     {
         base.OnJoinRoomFailed(returnCode, message);
         changeState("Couldn't join room: " + message);
+        ChangeCurrentPanel(joinRoomPanel);
     }
 
     public override void OnCreateRoomFailed(short returnCode, string message)
     {
         base.OnCreateRoomFailed(returnCode, message);
         changeState("Couldn't create room: " + message);
+        ChangeCurrentPanel(createdRoomPanel);
     }
 
     public override void OnPlayerEnteredRoom(Player newPlayer)
@@ -198,16 +224,46 @@ public class ConnectPhoton : MonoBehaviourPunCallbacks
         {
             
             string playerName = player.NickName;
-            string team = "Team";
+            string team = (Teams) player.CustomProperties["team"] == Teams.HUNTER ? "Hunter" : "Prop";
             Button btn = Instantiate(playerBtn, playerListContent.transform);
             btn.transform.Find("name").GetComponent<TextMeshProUGUI>().text = playerName;
-            btn.transform.Find("team").GetComponent<TextMeshProUGUI>().text = "Team";
+            btn.transform.Find("team").GetComponent<TextMeshProUGUI>().text = team;
         }
+    }
+        
+    private void ChangeTeam(Teams team)
+    {
+        playerProperties["team"] = team;
+        PhotonNetwork.LocalPlayer.SetCustomProperties(playerProperties);
+        changeState(team == Teams.HUNTER ? "Hunter" : "Prop" + " Team selected");
+        if(PhotonNetwork.CurrentRoom != null)
+        {
+            ChangeCurrentPanel(createdRoomPanel);
+        } else
+        {
+            TryToJoinRoomOfName();
+        }
+    }
+
+    public void OnClickHunterTeam()
+    {
+        ChangeTeam(Teams.HUNTER);
+    }
+
+    public void OnClickPropTeam()
+    {
+        ChangeTeam(Teams.PROP);
     }
 
     public void OnClickGoToCreateRoom()
     {
         ChangeCurrentPanel(createRoomPanel);
+    }
+
+    public void OnClickGoToChooseTeam()
+    {
+        if(!string.IsNullOrWhiteSpace(inputJoinRoomName.text) || !string.IsNullOrWhiteSpace(inputRoomName.text))
+            ChangeCurrentPanel(chooseTeamPanel);
     }
 
     public void OnClickGoToJoinRoom()
@@ -240,6 +296,7 @@ public class ConnectPhoton : MonoBehaviourPunCallbacks
         roomManagerPanel.SetActive(false);
         createdRoomPanel.SetActive(false);
         joinRoomPanel.SetActive(false);
+        chooseTeamPanel.SetActive(false);
 
         targetPanel.SetActive(true);
     }

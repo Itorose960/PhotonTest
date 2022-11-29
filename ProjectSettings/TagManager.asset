@@ -5,16 +5,19 @@ TagManager:
   serializedVersion: 2
   tags:
   - Ground
+  - Usable
+  - Interacteable
+  - Bullet
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - Usable
   - Water
   - UI
-  - 
-  - 
-  - 
+  - CharacterController
+  - CharacterBody
+  - Bullet
   - 
   - 
   - 

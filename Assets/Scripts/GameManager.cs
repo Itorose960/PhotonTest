@@ -7,11 +7,11 @@ public class GameManager : MonoBehaviour
 {
     void Start()
     {
-        PhotonNetwork.Instantiate("Player", new Vector3(Random.Range(-30f, 30f), 8, Random.Range(-30f, 30f)), Quaternion.identity);
+        if ((Teams) ((int)PhotonNetwork.LocalPlayer.CustomProperties["team"]) == Teams.PROP)
+            PhotonNetwork.Instantiate("Player", new Vector3(Random.Range(-3f, 3f), 8, Random.Range(-3f, 3f)), Quaternion.identity);
+        else
+            PhotonNetwork.Instantiate("Hunter", new Vector3(Random.Range(61f, 64f), 8, Random.Range(-3f, 3f)), Quaternion.identity);
     }
 
-    void Update()
-    {
-        
-    }
+    
 }
