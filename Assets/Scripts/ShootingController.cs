@@ -25,9 +25,12 @@ public class ShootingController : MonoBehaviourPunCallbacks
 
     private void Start()
     {
-        current_ammo = MAX_AMMO;
-        ammoText = GameObject.Find("Canvas").transform.GetChild(0).GetComponent<TextMeshProUGUI>();
-        ammoText.gameObject.SetActive(true);
+        if(photonView.IsMine)
+        {
+            current_ammo = MAX_AMMO;
+            ammoText = GameObject.Find("Canvas").transform.GetChild(0).GetComponent<TextMeshProUGUI>();
+            ammoText.gameObject.SetActive(true);
+        }
     }
 
     private void Update()
@@ -54,8 +57,9 @@ public class ShootingController : MonoBehaviourPunCallbacks
             canShoot = false;
             current_ammo--;
             UpdateAmmo();
-            photonView.RPC("InstantiateBullet", RpcTarget.All);
-            alternateShot = !alternateShot;        
+            Vector3 aimSpot = Camera.main.transform.position;
+            aimSpot += Camera.main.transform.forward * 50.0f;
+            photonView.RPC("InstantiateBullet", RpcTarget.All, aimSpot);  
             StartCoroutine(ShootingCooldown());
         }
     }
@@ -77,8 +81,8 @@ public class ShootingController : MonoBehaviourPunCallbacks
     }
 
     [PunRPC]
-    public void InstantiateBullet()
+    public void InstantiateBullet(Vector3 aimSpot)
     {
-        Instantiate(bullet, alternateShot ? leftCannon.position : rightCannon.position, alternateShot ? leftCannon.rotation : rightCannon.rotation);
+        Instantiate(bullet, rightCannon.position, rightCannon.rotation).transform.LookAt(aimSpot);
     }
 }

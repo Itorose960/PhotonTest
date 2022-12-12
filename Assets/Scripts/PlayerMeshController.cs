@@ -59,7 +59,8 @@ public class PlayerMeshController : MonoBehaviourPunCallbacks
 
     private string GetObject(string name)
     {
-        if (name.EndsWith(')')) { // It's a duplicate object
+        if (name.EndsWith(')'))
+        { // It's a duplicate object
             do
             {
                 name = name.Substring(0, name.Length - 1);

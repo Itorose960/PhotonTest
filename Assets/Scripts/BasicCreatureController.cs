@@ -12,8 +12,11 @@ public class BasicCreatureController : MonoBehaviourPunCallbacks
 
     private void Start()
     {
-        hpText = GameObject.Find("Canvas").transform.GetChild(1).GetComponent<TextMeshProUGUI>();
-        hpText.gameObject.SetActive(true);
+       if(photonView.IsMine)
+        {
+            hpText = GameObject.Find("Canvas").transform.GetChild(1).GetComponent<TextMeshProUGUI>();
+            hpText.gameObject.SetActive(true);
+        }
     }
 
 
@@ -24,16 +27,25 @@ public class BasicCreatureController : MonoBehaviourPunCallbacks
 
     private void OnCollisionEnter(Collision collision)
     {
-        if(collision.gameObject.CompareTag("Bullet"))
+        if(collision.gameObject.CompareTag("Bullet") && photonView.IsMine)
         {
             hp -= collision.gameObject.GetComponent<BulletController>().damage;
-            if(hp < 0)
+            if(hp <= 0)
             {
-                hp = 0;
-                //TODO: Die, become spectator or end game.
+                Camera.main.transform.SetParent(GameObject.Find("Hunter(Clone)").transform);
+                Camera.main.transform.localPosition = new Vector3(0, 1.61000502f, 0.234768003f);
+                Camera.main.transform.rotation = GameObject.Find("Hunter(Clone)").transform.rotation;
+                photonView.RPC("updatePropNumber", RpcTarget.All);
+                PhotonNetwork.Destroy(this.gameObject);
             }      
             UpdateText();
 
         }
+    }
+
+    [PunRPC]
+    private void updatePropNumber()
+    {
+        FindObjectOfType<GameManager>().props--;
     }
 }

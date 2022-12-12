@@ -47,10 +47,17 @@ public class ConnectPhoton : MonoBehaviourPunCallbacks
 
     private void Start()
     {
-        ChangeCurrentPanel(welcomePanel);
-        PhotonNetwork.AutomaticallySyncScene = true;
+      if(!PhotonNetwork.IsConnected)
+        {
+            ChangeCurrentPanel(welcomePanel);
+            PhotonNetwork.AutomaticallySyncScene = true;
+            
+        } else
+        {
+            ChangeCurrentPanel(roomManagerPanel);
+            PhotonNetwork.AutomaticallySyncScene = true;
+        }
         DontDestroyOnLoad(this.gameObject);
-
     }
 
 
