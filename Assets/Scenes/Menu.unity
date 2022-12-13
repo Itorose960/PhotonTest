@@ -3488,7 +3488,8 @@ Transform:
   m_LocalPosition: {x: 279.3969, y: 96.17518, z: 0.19211549}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 2143776754}
   m_Father: {fileID: 0}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -3504,6 +3505,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 243fc17ac8483b542809a58222a9d296, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  canvas: {fileID: 2143776750}
   welcomePanel: {fileID: 1359156913}
   createRoomPanel: {fileID: 1388275009}
   roomManagerPanel: {fileID: 1718353906}
@@ -6242,7 +6244,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 4
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1182524405
 GameObject:
@@ -7202,6 +7204,7 @@ GameObject:
   - component: {fileID: 1346129293}
   - component: {fileID: 1346129292}
   - component: {fileID: 1346129291}
+  - component: {fileID: 1346129294}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -7275,6 +7278,28 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1346129294
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1346129290}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa584fbee541324448dd18d8409c7a41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ObservedComponentsFoldoutOpen: 1
+  Group: 0
+  prefixField: -1
+  Synchronization: 3
+  OwnershipTransfer: 0
+  observableSearch: 2
+  ObservedComponents: []
+  sceneViewId: 1
+  InstantiationId: 0
+  isRuntimeInstantiated: 0
 --- !u!1 &1359156913
 GameObject:
   m_ObjectHideFlags: 0
@@ -10193,7 +10218,7 @@ GameObject:
   - component: {fileID: 2143776752}
   - component: {fileID: 2143776751}
   m_Layer: 5
-  m_Name: Canvas
+  m_Name: MainCanvas
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -10279,8 +10304,8 @@ RectTransform:
   - {fileID: 1383025316}
   - {fileID: 1215482900}
   - {fileID: 789730331}
-  m_Father: {fileID: 0}
-  m_RootOrder: 3
+  m_Father: {fileID: 543663703}
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}

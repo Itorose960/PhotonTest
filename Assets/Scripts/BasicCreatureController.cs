@@ -14,7 +14,7 @@ public class BasicCreatureController : MonoBehaviourPunCallbacks
     {
        if(photonView.IsMine)
         {
-            hpText = GameObject.Find("Canvas").transform.GetChild(1).GetComponent<TextMeshProUGUI>();
+            hpText = GameObject.Find("Canvas").transform.GetChild(0).GetComponent<TextMeshProUGUI>();
             hpText.gameObject.SetActive(true);
         }
     }

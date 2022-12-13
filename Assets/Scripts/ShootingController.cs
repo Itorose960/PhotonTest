@@ -12,7 +12,6 @@ public class ShootingController : MonoBehaviourPunCallbacks
     private TextMeshProUGUI ammoText;
 
     private int current_ammo;
-    private bool alternateShot = false;
     private bool canShoot = true;
 
     #region constants
@@ -28,7 +27,7 @@ public class ShootingController : MonoBehaviourPunCallbacks
         if(photonView.IsMine)
         {
             current_ammo = MAX_AMMO;
-            ammoText = GameObject.Find("Canvas").transform.GetChild(0).GetComponent<TextMeshProUGUI>();
+            ammoText = GameObject.Find("Canvas").transform.GetChild(1).GetComponent<TextMeshProUGUI>();
             ammoText.gameObject.SetActive(true);
         }
     }

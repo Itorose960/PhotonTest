@@ -13,6 +13,7 @@ public class ConnectPhoton : MonoBehaviourPunCallbacks
 
     [Header("Properties")]
     private ExitGames.Client.Photon.Hashtable playerProperties;
+    public GameObject canvas;
 
     [Header("Panels")]
     public GameObject welcomePanel;
@@ -44,20 +45,35 @@ public class ConnectPhoton : MonoBehaviourPunCallbacks
     [Header("GUI Join Room")]
     public TMP_InputField inputJoinRoomName;
 
+    public static ConnectPhoton instance;
+
+    private void Awake()
+    {
+        if (instance != null && instance != this)
+        {
+            Destroy(this.gameObject);
+        }
+        else
+        {
+            instance = this;
+            DontDestroyOnLoad(this);
+        }
+    }
 
     private void Start()
     {
-      if(!PhotonNetwork.IsConnected)
+        if (!PhotonNetwork.IsConnected)
         {
             ChangeCurrentPanel(welcomePanel);
             PhotonNetwork.AutomaticallySyncScene = true;
-            
-        } else
+
+        }
+        else
         {
             ChangeCurrentPanel(roomManagerPanel);
             PhotonNetwork.AutomaticallySyncScene = true;
         }
-        DontDestroyOnLoad(this.gameObject);
+
     }
 
 
@@ -284,6 +300,7 @@ public class ConnectPhoton : MonoBehaviourPunCallbacks
         PhotonNetwork.CurrentRoom.IsOpen = false;
         PhotonNetwork.CurrentRoom.IsVisible = false;
         PhotonNetwork.LoadLevel(1);
+        canvas.SetActive(false);
     }
 
     public void GoBack(GameObject lastRoom)

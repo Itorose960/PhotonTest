@@ -1,4 +1,5 @@
 using Photon.Pun;
+using Photon.Realtime;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
@@ -12,24 +13,17 @@ public class WinOrLoseController : MonoBehaviourPunCallbacks
     [SerializeField] private TextMeshProUGUI text;
     [SerializeField] Teams winningTeam;
     [SerializeField] private Button button;
+
     private void Start()
     {
-        if(photonView.IsMine)
-        {
-            if((Teams)((int)PhotonNetwork.LocalPlayer.CustomProperties["team"]) == winningTeam)
-            {
-                text.text = "Your team wins!";
-            } else
-            {
-                text.text = "Your team lost...";
-            }
-        }
+        Cursor.lockState = CursorLockMode.Confined;
     }
 
     public void GoBack()
     {
         PhotonNetwork.LeaveRoom();
         button.enabled = false;
+        FindObjectOfType<ConnectPhoton>().canvas.SetActive(true);
     }
 
     public override void OnLeftRoom()

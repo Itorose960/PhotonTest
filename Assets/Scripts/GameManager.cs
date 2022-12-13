@@ -9,7 +9,10 @@ using UnityEngine.SceneManagement;
 public class GameManager : MonoBehaviour
 {
     public int props = 0;
-    private float time = 0;
+    private float time = 400;
+
+    [SerializeField] private TextMeshProUGUI txtTime;
+
     void Start()
     {
 
@@ -33,21 +36,35 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    bool gameEnded = false;
+
     private void FixedUpdate()
     {
-        time += Time.fixedDeltaTime;
-        if(PhotonNetwork.IsMasterClient)
+        UpdateTimer();
+        if(!gameEnded)
         {
             if (props == 0)
             {
-                PhotonNetwork.LoadLevel(3);
+                gameEnded = true;
+                SceneManager.LoadScene(3);
+                //PhotonNetwork.LoadLevel(3);
             }
-            else if (time >= 200)
+            else if (time <= 0)
             {
-                PhotonNetwork.LoadLevel(2);
+                gameEnded = true;
+                SceneManager.LoadScene(2);
+                //PhotonNetwork.LoadLevel(2);
             }
         }
     }
 
+
+    private void UpdateTimer()
+    {
+        time -= Time.fixedDeltaTime;
+        float minutes = Mathf.FloorToInt(time / 60);
+        float seconds = Mathf.FloorToInt(time % 60);
+        txtTime.text = minutes + ":" + (seconds < 10 ? "0" + seconds : seconds);
+    }
 
 }
